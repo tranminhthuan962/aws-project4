@@ -78,4 +78,4 @@ jobs:
 
       - name: Build application using Docker
         run: |
-          docker build -t project4-backend:v1 .
+          docker build -t project4-backend:latest .

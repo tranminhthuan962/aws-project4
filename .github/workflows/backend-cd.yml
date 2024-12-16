@@ -94,11 +94,11 @@ jobs:
         run: |
           aws eks --region us-east-1 update-kubeconfig --name project4-cluster
           kubectl get svc
-          docker build -t project4-backend .
-          docker push 676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-backend:v1
+          docker build -t 676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-backend:latest .
+          docker push 676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-backend:latest
       - name: Deploy to AWS EKS
         run: |
           aws eks --region us-east-1 update-kubeconfig --name project4-cluster
           cd k8s
-          kustomize edit set image backend=676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-backend:v1
+          kustomize edit set image backend=676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-backend:latest
           kustomize build | kubectl apply -f -
