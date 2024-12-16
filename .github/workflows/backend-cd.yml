@@ -16,7 +16,7 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - name: Checkout code
+      - name: Checkout codes
         uses: actions/checkout@v3
 
       - name: Setup Python
