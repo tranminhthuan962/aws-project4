@@ -1,0 +1,96 @@
+name: Frontend Continuous Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+env:
+  NODE_VERSION: 18.x
+
+jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Run lint
+        run: |
+          npm run lint -- --fix
+
+  test:
+    name: Testing
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Run tests
+        run: npm run test
+
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-eat-1
+
+      - name: Login AWS
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-eat-1
+
+      - name: Build and Push Docker Image
+        run: |
+          aws eks --region us-east-1 update-kubeconfig --name project4-cluster
+          kubectl get svc
+          export EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}')
+          echo "EXTERNALIP=$EXTERNALIP"
+          docker build --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP -t project4:latest .
+          docker push 676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-frontend:latest
+
+      - name: Deploy to AWS EKS
+        run: |
+          aws eks --region us-east-1 update-kubeconfig --name project4-cluster
+          cd k8s
+          kustomize edit set image frontend=676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-frontend:latest
+          kustomize build | kubectl apply -f -
