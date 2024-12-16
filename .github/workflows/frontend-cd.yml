@@ -85,7 +85,7 @@ jobs:
           kubectl get svc
           export EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}')
           echo "EXTERNALIP=$EXTERNALIP"
-          docker build --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP -t project4:latest .
+          docker build --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP -t 676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-frontend:latest .
           docker push 676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-frontend:latest
 
       - name: Deploy to AWS EKS
