@@ -1,10 +1,12 @@
 name: Backend Continuous Deployment
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+  push:
+  branches:
+    - main
+  paths:
+    - "backend/**"
 
 jobs:
   lint:
@@ -58,6 +60,7 @@ jobs:
       - name: Run Backend Tests
         run: |
           pipenv run test
+          
   deploy:
     name: Deploy to AWS
     runs-on: ubuntu-latest
