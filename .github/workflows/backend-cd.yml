@@ -100,5 +100,5 @@ jobs:
         run: |
           aws eks --region us-east-1 update-kubeconfig --name project4-cluster
           cd k8s
-          kustomize edit set image frontend=676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-backend:latest
+          kustomize edit set image backend=676560186348.dkr.ecr.us-east-1.amazonaws.com/project4-backend:latest
           kustomize build | kubectl apply -f -
